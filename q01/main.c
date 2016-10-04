@@ -1,7 +1,11 @@
+#define _BSD_SOURCE
+#include <sys/types.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
 
 struct Infos{
 	char *name_file;
@@ -46,9 +50,16 @@ void set_infos(char * name, char * data){
 	infos.minuto[12-10] = '\0';
 }
 
+void print_infos(const struct stat *sb){
+	printf("Data de criacao: %s\n", ctime(&sb->st_ctime));
+	printf("Ultimo acesso: %s\n", ctime(&sb->st_atime));
+	printf("Ultima modificacao: %s\n", ctime(&sb->st_mtime));
+}
+
 int main(int argc, char *argv[]){
 	char *name_file = (char*)argv[1];
 	char *data = (char*)argv[2];
+	struct stat sb;
 	int i;
 
 	if((strlen(data) != 12) || argc != 3){//Conferindo entradas..
@@ -65,6 +76,10 @@ int main(int argc, char *argv[]){
 	printf("Hora: %s\n", infos.hora);
 	printf("Minuto: %s\n", infos.minuto);
 	
+	printf("Testando:\n");
+	lstat(infos.name_file, &sb);
+	printf("opa..\n");
+	print_infos(&sb);
 
 	return 0;
 }

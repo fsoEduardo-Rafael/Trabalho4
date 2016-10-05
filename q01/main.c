@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #define _BSD_SOURCE
 #include <sys/types.h>
 #include <time.h>
@@ -5,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 
 struct Infos{
@@ -60,6 +62,7 @@ int main(int argc, char *argv[]){
 	char *name_file = (char*)argv[1];
 	char *data = (char*)argv[2];
 	struct stat sb;
+	struct timespec times[2];
 	int i;
 
 	if((strlen(data) != 12) || argc != 3){//Conferindo entradas..
@@ -81,5 +84,18 @@ int main(int argc, char *argv[]){
 	printf("opa..\n");
 	print_infos(&sb);
 
+	printf("---------------------------\n\n");
+
+	for(i=0 ; i<2 ; i++){
+		times[i].tv_sec = infos.minuto;
+		times[i].tv_nsec = UTIME_NOW;
+		//times[i].dia = infos.dia;
+		//times[i].hora = infos.hora;
+		//times[i].minuto = infos.minuto;
+	}
+	if (utimensat(AT_FDCWD, infos.name_file, times, 0) == -1)
+		printf("Erro aqui");
+	set_infos(name_file, data);
+	print_infos(&sb);
 	return 0;
 }

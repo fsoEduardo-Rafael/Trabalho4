@@ -11,7 +11,7 @@ struct Infos{
 
 struct Infos infos;
 
-
+//Faz o parse da entrada por linha de comando
 void set_infos(char * name, char * data){
 	int i;
 	//printf("chegou aqui\n");
@@ -44,12 +44,14 @@ void set_infos(char * name, char * data){
 
 }
 
+//Printa as informações do arquivo
 void print_infos(const struct stat sb){
 	printf("Data de criacao: %s\n", ctime(&sb.st_ctime));
 	printf("Ultimo acesso: %s\n", ctime(&sb.st_atime));
 	printf("Ultima modificacao: %s\n", ctime(&sb.st_mtime));
 }
 
+//Converte a string no inteiro desejado
 int convert_string_int(char string[5]){
 	int result=0, i, len;
 	len = strlen(string);
@@ -59,6 +61,7 @@ int convert_string_int(char string[5]){
 	return result;
 }
 
+//Muda os atributos do arquivo.
 void changing_infos(){
 	char buffer[40];
 	struct utimbuf utb;

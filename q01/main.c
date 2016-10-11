@@ -1,24 +1,15 @@
-#define _XOPEN_SOURCE 700
-#define _BSD_SOURCE
-#include <sys/types.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
+#include "util.h"
 
 struct Infos{
 	char *name_file;
 	char ano[5];
 	char mes[3];
 	char dia[3];
-	char hora[3];
-	char minuto[3];
+	char tempo[6];
 };
 
 struct Infos infos;
+
 
 void set_infos(char * name, char * data){
 	int i;
@@ -41,28 +32,36 @@ void set_infos(char * name, char * data){
 	}
 	infos.dia[8-6] = '\0';
 
-	for(i=8 ; i<10 ; i++){
-		infos.hora[i-8] = data[i];
+	for(i=8 ; i<12 ; i++){
+		infos.tempo[i-8] = data[i];
 	}
-	infos.hora[10-8] = '\0';
-
-	for(i=10 ; i<12 ; i++){
-		infos.minuto[i-10] = data[i];
-	}
-	infos.minuto[12-10] = '\0';
+	infos.tempo[12-8] = '\0';
 }
 
-void print_infos(const struct stat *sb){
-	printf("Data de criacao: %s\n", ctime(&sb->st_ctime));
-	printf("Ultimo acesso: %s\n", ctime(&sb->st_atime));
-	printf("Ultima modificacao: %s\n", ctime(&sb->st_mtime));
+void print_infos(const struct stat sb){
+	printf("Data de criacao: %s\n", ctime(&sb.st_ctime));
+	printf("Ultimo acesso: %s\n", ctime(&sb.st_atime));
+	printf("Ultima modificacao: %s\n", ctime(&sb.st_mtime));
+}
+
+void changing_infos(){
+	struct utimbuf utb;
+	const struct stat new;
+	printf("Olha: %d", (int) infos.tempo);
+	utb.actime = (int) infos.tempo;
+	utb.modtime = (int) infos.tempo;
+
+	if(utime(infos.name_file, &utb) == -1){
+		printf("utime");
+	}
+	stat(infos.name_file, &new);
+	print_infos(new);
 }
 
 int main(int argc, char *argv[]){
 	char *name_file = (char*)argv[1];
 	char *data = (char*)argv[2];
 	struct stat sb;
-	struct timespec times[2];
 	int i;
 
 	if((strlen(data) != 12) || argc != 3){//Conferindo entradas..
@@ -76,26 +75,16 @@ int main(int argc, char *argv[]){
 	printf("Ano: %s\n", infos.ano);
 	printf("Mes: %s\n", infos.mes);
 	printf("Dia: %s\n", infos.dia);
-	printf("Hora: %s\n", infos.hora);
-	printf("Minuto: %s\n", infos.minuto);
+	printf("Hora: %s\n", infos.tempo);
 	
 	printf("Testando:\n");
-	lstat(infos.name_file, &sb);
+	stat(infos.name_file, &sb);
 	printf("opa..\n");
-	print_infos(&sb);
+	print_infos(sb);
 
 	printf("---------------------------\n\n");
 
-	for(i=0 ; i<2 ; i++){
-		times[i].tv_sec = infos.minuto;
-		times[i].tv_nsec = UTIME_NOW;
-		//times[i].dia = infos.dia;
-		//times[i].hora = infos.hora;
-		//times[i].minuto = infos.minuto;
-	}
-	if (utimensat(AT_FDCWD, infos.name_file, times, 0) == -1)
-		printf("Erro aqui");
-	set_infos(name_file, data);
-	print_infos(&sb);
+	printf("AGORA VAIII:\n\n");
+	changing_infos();
 	return 0;
 }

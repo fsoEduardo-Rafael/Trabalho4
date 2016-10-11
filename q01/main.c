@@ -5,7 +5,8 @@ struct Infos{
 	char ano[5];
 	char mes[3];
 	char dia[3];
-	char tempo[6];
+	char hora[3];
+	char minuto[3];
 };
 
 struct Infos infos;
@@ -20,7 +21,6 @@ void set_infos(char * name, char * data){
 	for(i=0 ; i<4 ; i++){
 		infos.ano[i] = data[i];
 	}
-	printf("chegou aqui\n");
 	infos.ano[4] = '\0';
 
 	for(i=4 ; i<6 ; i++){
@@ -32,10 +32,16 @@ void set_infos(char * name, char * data){
 	}
 	infos.dia[8-6] = '\0';
 
-	for(i=8 ; i<12 ; i++){
-		infos.tempo[i-8] = data[i];
+	for(i=8 ; i<10 ; i++){
+		infos.hora[i-8] = data[i];
 	}
-	infos.tempo[12-8] = '\0';
+	infos.hora[10-8] = '\0';
+
+	for(i=10 ; i<12 ; i++){
+		infos.minuto[i-10] = data[i];
+	}
+	infos.minuto[12-8] = '\0';
+
 }
 
 void print_infos(const struct stat sb){
@@ -44,12 +50,32 @@ void print_infos(const struct stat sb){
 	printf("Ultima modificacao: %s\n", ctime(&sb.st_mtime));
 }
 
+int convert_string_int(char string[5]){
+	int result=0, i, len;
+	len = strlen(string);
+	for(i=0 ; i<len ; i++){
+		result = result * 10 + ( string[i] - '0' );
+	}
+	return result;
+}
+
 void changing_infos(){
+	char buffer[40];
 	struct utimbuf utb;
+	struct tm tm;
+	time_t converted_time;
 	const struct stat new;
-	printf("Olha: %d", (int) infos.tempo);
-	utb.actime = (int) infos.tempo;
-	utb.modtime = (int) infos.tempo;
+
+	tm.tm_year = convert_string_int(infos.ano) - 1900;
+	tm.tm_mon = convert_string_int(infos.mes) - 1;
+	tm.tm_mday = convert_string_int(infos.dia);
+	tm.tm_hour = convert_string_int(infos.hora)+1;
+	tm.tm_min = convert_string_int(infos.minuto);
+
+	converted_time = mktime(&tm);
+	
+	utb.actime = converted_time;
+	utb.modtime = converted_time;
 
 	if(utime(infos.name_file, &utb) == -1){
 		printf("utime");
@@ -69,22 +95,14 @@ int main(int argc, char *argv[]){
 	}
 
 	set_infos(name_file, data);
-
-	printf("Nome: %s\n", infos.name_file);
-	printf("Data: %s\n", data);
-	printf("Ano: %s\n", infos.ano);
-	printf("Mes: %s\n", infos.mes);
-	printf("Dia: %s\n", infos.dia);
-	printf("Hora: %s\n", infos.tempo);
 	
-	printf("Testando:\n");
 	stat(infos.name_file, &sb);
-	printf("opa..\n");
+	printf("Informacoes anteriores:\n");
 	print_infos(sb);
 
 	printf("---------------------------\n\n");
 
-	printf("AGORA VAIII:\n\n");
+	printf("Alterando inforamcoes..\n\n");
 	changing_infos();
 	return 0;
 }

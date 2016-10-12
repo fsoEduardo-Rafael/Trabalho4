@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <utime.h>
+#include <assert.h>
 
 struct Infos{
 	char *name_file;
@@ -72,12 +73,12 @@ int convert_string_int(char string[5]){
 }
 
 //Muda os atributos do arquivo.
-void changing_infos(){
+void changing_infos(char name_file[20]){
 	char buffer[40];
 	struct utimbuf utb;
 	struct tm tm;
 	time_t converted_time;
-	const struct stat new;
+	struct stat new;
 
 	tm.tm_year = convert_string_int(infos.ano) - 1900;
 	tm.tm_mon = convert_string_int(infos.mes) - 1;
@@ -90,9 +91,49 @@ void changing_infos(){
 	utb.actime = converted_time;
 	utb.modtime = converted_time;
 
-	if(utime(infos.name_file, &utb) == -1){
+	if(utime(name_file, &utb) == -1){
 		printf("utime");
 	}
-	stat(infos.name_file, &new);
+	stat(name_file, &new);
 	print_infos(new);
+}
+
+//Muda os atributos do arquivo.
+void changing_infos_bkp(char name_file[20], struct stat sb){
+	char buffer[40];
+	struct utimbuf utb;
+	time_t converted_time;
+	struct stat new;
+	
+	utb.actime = sb.st_atime;
+	utb.modtime = sb.st_mtime;
+
+	if(utime(name_file, &utb) == -1){
+		printf("utime");
+	}
+	stat(name_file, &new);
+	print_infos(new);
+}
+
+
+char * generate_bkp(char *name_file){
+	int in_fd = open(name_file, O_RDONLY);
+	FILE *fp;
+	FILE *fp2;
+	printf("%s\n", name_file);
+	assert(in_fd >= 0);
+	strcat(name_file, ".bkp");
+	printf("%s\n", name_file);
+	fp = fopen(infos.name_file, "r");
+	fp2 = fopen(name_file, "w");
+	assert(fp >= 0);
+	char buffer[8192];
+	size_t bytes;
+
+
+	while (0 < (bytes = fread(buffer, 1, sizeof(buffer), fp)))
+    	fwrite(buffer, 1, bytes, fp2);
+    fclose(fp);
+    fclose(fp2);
+    return name_file;
 }

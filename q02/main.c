@@ -20,8 +20,8 @@ int main(int argc, char * argv[]){
 	printf("Caminho: %s\n", caminho);
 	printf("String: %s\n", string_part);
 	printf("Num: %d\n", num_lines);
-
-	print_directory_files(caminho, string_part);
+	num = num_lines;
+	print_directory_files(caminho, string_part, strlen(caminho));
 
 	return 0;
 }
